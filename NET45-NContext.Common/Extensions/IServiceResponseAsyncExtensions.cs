@@ -2,7 +2,6 @@
 {
     using System;
     using System.Collections.Generic;
-    using System.Threading;
     using System.Threading.Tasks;
 
     /// <summary>
@@ -24,12 +23,9 @@
             this IServiceResponse<T> serviceResponse,
             Func<T, Task<IServiceResponse<T2>>> bindFunc)
         {
-            if (serviceResponse.IsLeft)
-            {
-                return Task.FromResult(serviceResponse.CreateGenericErrorResponse<T, T2>(serviceResponse.GetLeft()));
-            }
-
-            return bindFunc(serviceResponse.GetRight());
+            return serviceResponse.IsRight
+                ? bindFunc(serviceResponse.Data)
+                : serviceResponse.Error.AsErrorResponse<T2>().ToTask();
         }
 
         public static async Task<IServiceResponse<IEnumerable<T2>>> BindManyAsync<T, T2>(
@@ -38,22 +34,22 @@
         {
             if (serviceResponse.IsLeft)
             {
-                return serviceResponse.CreateGenericErrorResponse<IEnumerable<T>, IEnumerable<T2>>(serviceResponse.GetLeft());
+                return serviceResponse.Error.AsErrorResponse<IEnumerable<T2>>();
             }
 
             var result = new List<T2>();
-            foreach (var element in serviceResponse.GetRight())
+            foreach (var element in serviceResponse.Data)
             {
                 var elementResponse = await bindFunc(element);
                 if (elementResponse.IsLeft)
                 {
-                    return serviceResponse.CreateGenericErrorResponse<IEnumerable<T>, IEnumerable<T2>>(elementResponse.GetLeft());
+                    return elementResponse.Error.AsErrorResponse<IEnumerable<T2>>();
                 }
 
-                result.Add(elementResponse.GetRight());
+                result.Add(elementResponse.Data);
             }
 
-            return serviceResponse.CreateGenericDataResponse(result);
+            return result.AsServiceResponse();
         }
 
         /// <summary>
@@ -64,28 +60,14 @@
         /// <param name="serviceResponse">The service response.</param>
         /// <param name="catchFunc">Async function to invoke.</param>
         /// <returns>The current <paramref name="serviceResponse"/> unless the <paramref name="catchFunc"/> returns a faulted task.</returns>
+        [Obsolete("JF - This method name is misleading, since a catch block will stop error propagation in imperative languages, but this does not stop the error.")]
         public static Task<IServiceResponse<T>> CatchAsync<T>(
             this IServiceResponse<T> serviceResponse,
             Func<Error, Task> catchFunc)
         {
-            if (serviceResponse.IsLeft)
-            {
-                return catchFunc.Invoke(serviceResponse.GetLeft())
-                    .ContinueWith(task =>
-                    {
-                        if (task.IsFaulted)
-                        {
-                            return serviceResponse.CreateGenericErrorResponse(task.Exception.ToError());
-                        }
-
-                        return serviceResponse;
-                    },
-                    CancellationToken.None,
-                    TaskContinuationOptions.ExecuteSynchronously,
-                    TaskScheduler.Default);
-            }
-
-            return Task.FromResult(serviceResponse);
+            return serviceResponse.IsRight
+                ? serviceResponse.ToTask()
+                : catchFunc(serviceResponse.Error).ErrorIfFaulted(serviceResponse);
         }
 
         /// <summary>
@@ -97,16 +79,14 @@
         /// <param name="continueWithFunction">The continue with function.</param>
         /// <returns>If <paramref name="serviceResponse"/>.IsLeft, then the instance of <see cref="IServiceResponse{T}" /> 
         /// returned by <paramref name="continueWithFunction" />, else returns current <paramref name="serviceResponse"/>.</returns>
+        [Obsolete("JF - This method more resembles a catch block, but since Catch is already used, the name should get changed to something new if Catch does too.")]
         public static Task<IServiceResponse<T>> CatchAndContinueAsync<T>(
             this IServiceResponse<T> serviceResponse, 
             Func<Error, Task<IServiceResponse<T>>> continueWithFunction)
         {
-            if (serviceResponse.IsLeft)
-            {
-                return continueWithFunction.Invoke(serviceResponse.GetLeft());
-            }
-
-            return Task.FromResult(serviceResponse);
+            return serviceResponse.IsRight
+                ? serviceResponse.ToTask()
+                : continueWithFunction(serviceResponse.Error);
         }
 
         /// <summary>
@@ -118,23 +98,15 @@
         /// <param name="continueWithFunction">The continue with function.</param>
         /// <returns>If <paramref name="serviceResponse"/>.IsLeft, then the instance of <see cref="IServiceResponse{T}" /> 
         /// returned by <paramref name="continueWithFunction" />, else returns current <paramref name="serviceResponse"/>.</returns>
+        [Obsolete("JF - This method isn't really async at all.  It might as well be a method that just returns ISR, and thus be expressed as isr.CatchAndContinue(continuteWithFunction).ToTask().")]
         public static Task<IServiceResponse<T>> CatchAndContinueAsync<T>(
             this IServiceResponse<T> serviceResponse, 
             Func<Error, T> continueWithFunction)
         {
-            var tcs = new TaskCompletionSource<IServiceResponse<T>>();
-            if (serviceResponse.IsLeft)
-            {
-                T result = continueWithFunction.Invoke(serviceResponse.GetLeft());
-
-                tcs.SetResult(new DataResponse<T>(result));
-            }
-            else
-            {
-                tcs.SetResult(serviceResponse);
-            }
-
-            return tcs.Task;
+            return (serviceResponse.IsRight
+                    ? serviceResponse
+                    : continueWithFunction(serviceResponse.Error).AsServiceResponse())
+                .ToTask();
         }
 
         /// <summary>
@@ -151,24 +123,9 @@
             this IServiceResponse<T> serviceResponse,
             Func<T, Task> letFunc)
         {
-            if (serviceResponse.IsLeft)
-            {
-                return Task.FromResult(serviceResponse.CreateGenericErrorResponse(serviceResponse.GetLeft()));
-            }
-
-            return letFunc(serviceResponse.GetRight())
-                .ContinueWith(task =>
-                {
-                    if (task.IsFaulted)
-                    {
-                        return new ErrorResponse<T>(task.Exception.ToError());
-                    }
-
-                    return serviceResponse;
-                },
-                CancellationToken.None,
-                TaskContinuationOptions.ExecuteSynchronously,
-                TaskScheduler.Default);
+            return serviceResponse.IsRight
+                ? letFunc(serviceResponse.Data).ErrorIfFaulted(serviceResponse)
+                : serviceResponse.ToTask();
         }
 
         /// <summary>
@@ -180,19 +137,17 @@
         /// <param name="letAction">The let function.</param>
         /// <returns>Returns the current <paramref name="serviceResponse"/> instance unless 
         /// <paramref name="letAction"/> returns a faulted task. <see cref="Task.IsFaulted"/></returns>
+        [Obsolete("JF - This can be expressed more clearly as isr.Let(action).ToTask(). Labelling the method as Async is misleading.")]
         public static Task<IServiceResponse<T>> LetAsync<T>(
             this IServiceResponse<T> serviceResponse,
             Action<T> letAction)
         {
-            if (serviceResponse.IsLeft)
+            if (serviceResponse.IsRight)
             {
-                return Task.FromResult(serviceResponse);
+                // TODO: (DG) This can yield unexpected results of the action is an asyncVoid and throws an exception!
+                letAction(serviceResponse.Data);
             }
-
-            // TODO: (DG) This can yield unexpected results of the action is an asyncVoid and throws an exception!
-            letAction(serviceResponse.GetRight());
-
-            return Task.FromResult(serviceResponse);
-        }
+            return serviceResponse.ToTask();
+        }        
     }
 }

@@ -74,14 +74,16 @@
     <Compile Include="Error.cs" />
     <Compile Include="ErrorResponse.cs" />
     <Compile Include="Extensions\ErrorExtensions.cs" />
+    <Compile Include="Extensions\ExceptionExtensions.cs" />
     <Compile Include="Extensions\IEitherExtensions.cs" />
     <Compile Include="Extensions\IListExtensions.cs" />
     <Compile Include="Extensions\IMaybeIEnumerableExtensions.cs" />
     <Compile Include="Extensions\IServiceResponseAsyncExtensions.cs" />
     <Compile Include="Extensions\IServiceResponseAwaitExtensions.cs" />
     <Compile Include="Extensions\IServiceResponseEnumerableDataExtensions.cs" />
-    <Compile Include="Extensions\IServiceResponseHelper.cs" />
     <Compile Include="Extensions\IServiceResponseIEnumerableExtensions.cs" />
+    <Compile Include="Extensions\ObjectExtensions.cs" />
+    <Compile Include="Extensions\TaskExtensions.cs" />
     <Compile Include="Extensions\TypeExtensions.cs" />
     <Compile Include="IEither.cs" />
     <Compile Include="Extensions\IServiceResponseExtensions.cs" />
