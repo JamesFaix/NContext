@@ -39,12 +39,9 @@
 
             if (isNothingToErrorBindingFunc == null) throw new ArgumentNullException("isNothingToErrorBindingFunc");
 
-            if (instance.IsJust)
-            {
-                return new DataResponse<T>(instance.FromMaybe(default(T)));
-            }
-
-            return new ErrorResponse<T>(isNothingToErrorBindingFunc.Invoke());
+            return instance.IsJust
+                ? instance.FromMaybe(default(T)).AsServiceResponse()
+                : isNothingToErrorBindingFunc().AsErrorResponse<T>();
         }
         
         /// <summary>
@@ -62,23 +59,7 @@
 
             if (defaultValue == null) throw new ArgumentNullException("defaultValue");
 
-            return new DataResponse<T>(instance.FromMaybe(defaultValue));
-        }
-
-        /// <summary>
-        /// Returns the instance as a <see cref="IMaybe{T}"/>
-        /// </summary>
-        /// <typeparam name="T">The type of the object to wrap</typeparam>
-        /// <param name="instance">The instance.</param>
-        /// <returns><see cref="IMaybe{T}"/></returns>
-        public static IMaybe<T> ToMaybe<T>(this T instance)
-        {
-            if (instance == null)
-            {
-                return new Nothing<T>();
-            }
-
-            return new Just<T>(instance);
+            return instance.FromMaybe(defaultValue).AsServiceResponse();
         }
     }
 }

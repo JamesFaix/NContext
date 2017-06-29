@@ -2,7 +2,6 @@
 {
     using System;
     using System.Collections.Generic;
-    using System.Linq;
 
     public static class IMaybeIEnumerableExtensions
     {
@@ -17,11 +16,11 @@
         /// <returns><see cref="IMaybe{T}" /></returns>
         public static IMaybe<T> MaybeFirst<T>(this IEnumerable<T> enumerable, Func<T, Boolean> predicate = null)
         {
-            using (var enumerator = GetEnumerator(enumerable, predicate))
+            using (var e = enumerable.GetEnumerator(predicate))
             {
-                return enumerator.MoveNext()
-                ? enumerator.Current.ToMaybe()
-                : new Nothing<T>();
+                return e.MoveNext()
+                    ? e.Current.ToMaybe()
+                    : new Nothing<T>();
             }
         }
 
@@ -34,26 +33,21 @@
         /// <returns><see cref="IMaybe{T}" /> with the single element in the sequence that passes the test in the (optional) predicate function.</returns>
         public static IMaybe<T> MaybeSingle<T>(this IEnumerable<T> enumerable, Func<T, Boolean> predicate = null)
         {
-            using (var enumerator = GetEnumerator(enumerable, predicate))
+            using (var e = enumerable.GetEnumerator(predicate))
             {
-                if (!enumerator.MoveNext())
+                if (!e.MoveNext())
                 {
                     return new Nothing<T>();
                 }
 
-                T current = enumerator.Current;
-                if (!enumerator.MoveNext())
+                T current = e.Current;
+                if (!e.MoveNext())
                 {
                     return current.ToMaybe();
                 }
             }
 
             return new Nothing<T>();
-        }
-
-        private static IEnumerator<T> GetEnumerator<T>(IEnumerable<T> enumerable, Func<T, Boolean> predicate = null)
-        {
-            return (predicate == null) ? enumerable.GetEnumerator() : enumerable.Where(predicate).GetEnumerator();
-        }
+        }        
     }
 }

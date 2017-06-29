@@ -2,7 +2,6 @@ namespace NContext.Common
 {
     using System;
     using System.Collections.Generic;
-    using System.Linq;
     using System.Net;
 
     /// <summary>
@@ -19,7 +18,7 @@ namespace NContext.Common
         /// <returns>IServiceResponse{T} with the first element in the sequence that passes the test in the (optional) predicate function.</returns>
         public static IServiceResponse<T> FirstResponse<T>(this IEnumerable<T> enumerable, Func<T, Boolean> predicate = null)
         {
-            using (var e = GetEnumerator(enumerable, predicate))
+            using (var e = enumerable.GetEnumerator(predicate))
             {
                 return e.MoveNext()
                     ? e.Current.AsServiceResponse()
@@ -40,7 +39,7 @@ namespace NContext.Common
         /// <returns>IServiceResponse{T} with the single element in the sequence that passes the test in the (optional) predicate function.</returns>
         public static IServiceResponse<T> SingleResponse<T>(this IEnumerable<T> enumerable, Func<T, Boolean> predicate = null)
         {
-            using (var e = GetEnumerator(enumerable, predicate))
+            using (var e = enumerable.GetEnumerator(predicate))
             {
                 if (!e.MoveNext())
                 {
@@ -63,14 +62,6 @@ namespace NContext.Common
                     "IServiceResponseIEnumerableExtensions_SingleResponse_MoreThanOneMatch",
                     new[] {"Enumerable has more than one matched entry."})
                 .AsErrorResponse<T>();
-        }
-
-        private static IEnumerator<T> GetEnumerator<T>(IEnumerable<T> enumerable, Func<T, Boolean> predicate = null)
-        {
-            return (predicate == null 
-                    ? enumerable
-                    : enumerable.Where(predicate))
-                .GetEnumerator();
         }
     }
 }
