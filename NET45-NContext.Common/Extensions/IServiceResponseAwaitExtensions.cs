@@ -21,8 +21,8 @@
             this Task<IServiceResponse<T>> serviceResponseFuture, 
             Func<T, IServiceResponse<T2>> bindFunc)
         {
-            var serviceResponse = await serviceResponseFuture;
-            return serviceResponse.Bind(bindFunc);
+            return (await serviceResponseFuture)
+                .Bind(bindFunc);
         }
 
         /// <summary>
@@ -40,16 +40,16 @@
             this Task<IServiceResponse<T>> serviceResponseFuture,
             Func<T, Task<IServiceResponse<T2>>> bindFunc)
         {
-            var serviceResponse = await serviceResponseFuture;
-            return await serviceResponse.BindAsync(bindFunc);
+            return await (await serviceResponseFuture)
+                .BindAsync(bindFunc);
         }
 
         public static async Task<IServiceResponse<IEnumerable<T2>>> AwaitBindManyAsync<T, T2>(
             this Task<IServiceResponse<IEnumerable<T>>> serviceResponseFuture, 
             Func<T, Task<IServiceResponse<T2>>> bindFunc)
         {
-            var serviceResponse = await serviceResponseFuture;
-            return await serviceResponse.BindManyAsync(bindFunc);
+            return await (await serviceResponseFuture)
+                .BindManyAsync(bindFunc);
         }
 
         /// <summary>
@@ -66,8 +66,8 @@
             this Task<IServiceResponse<T>> serviceResponseFuture,
             Func<T, Task> letFunc)
         {
-            var serviceResponse = await serviceResponseFuture;
-            return await serviceResponse.LetAsync(letFunc);
+            return await (await serviceResponseFuture)
+                .LetAsync(letFunc);
         }
 
         /// <summary>
@@ -83,8 +83,8 @@
             this Task<IServiceResponse<T>> serviceResponseFuture,
             Action<T> letAction)
         {
-            var serviceResponse = await serviceResponseFuture;
-            return await serviceResponse.LetAsync(letAction);
+            return (await serviceResponseFuture)
+                .Let(letAction);
         }
 
         /// <summary>
@@ -102,8 +102,8 @@
             this Task<IServiceResponse<T>> serviceResponseFuture, 
             Func<T, T2> fmapFunc)
         {
-            var serviceResponse = await serviceResponseFuture;
-            return serviceResponse.Fmap(fmapFunc);
+            return (await serviceResponseFuture)
+                .Fmap(fmapFunc);
         }
 
         /// <summary>
@@ -119,8 +119,8 @@
             this Task<IServiceResponse<T>> serviceResponseFuture, 
             Func<Error, Task> catchFunc)
         {
-            var serviceResponse = await serviceResponseFuture;
-            return await serviceResponse.CatchAsync(catchFunc);
+            return await (await serviceResponseFuture)
+                .CatchAsync(catchFunc);
         }
 
         /// <summary>
@@ -137,8 +137,8 @@
             this Task<IServiceResponse<T>> serviceResponseFuture,
             Func<Error, IServiceResponse<T>> continueWithFunction)
         {
-            var serviceResponse = await serviceResponseFuture;
-            return serviceResponse.CatchAndContinue(continueWithFunction);
+            return (await serviceResponseFuture)
+                .CatchAndContinue(continueWithFunction);
         }
 
         /// <summary>
@@ -155,8 +155,8 @@
             this Task<IServiceResponse<T>> serviceResponseFuture,
             Func<Error, Task<IServiceResponse<T>>> continueWithFunction)
         {
-            var serviceResponse = await serviceResponseFuture;
-            return await serviceResponse.CatchAndContinueAsync(continueWithFunction);
+            return await (await serviceResponseFuture)
+                .CatchAndContinueAsync(continueWithFunction);
         }
     }
 }
