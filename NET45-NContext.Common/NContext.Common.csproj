@@ -73,6 +73,7 @@
     <Compile Include="Either.cs" />
     <Compile Include="Error.cs" />
     <Compile Include="ErrorResponse.cs" />
+    <Compile Include="Extensions\ErrorExtensions.cs" />
     <Compile Include="Extensions\IEitherExtensions.cs" />
     <Compile Include="Extensions\IListExtensions.cs" />
     <Compile Include="Extensions\IMaybeIEnumerableExtensions.cs" />

@@ -17,14 +17,11 @@
         /// <param name="serviceResponse">The service response.</param>
         /// <param name="bindingFunction">The binding function.</param>
         /// <returns>Instance of <see cref="IServiceResponse{T2}" />.</returns>
-        public static IServiceResponse<T2> Bind<T, T2>(this IServiceResponse<T> serviceResponse, Func<T, IServiceResponse<T2>> bindingFunction)
+        public static IServiceResponse<T2> Bind<T, T2>(this IServiceResponse<T> serviceResponse, Func<T, IServiceResponse<T2>> bindingFunction)                 
         {
-            if (serviceResponse.IsLeft)
-            {
-                return serviceResponse.CreateGenericErrorResponse<T, T2>(serviceResponse.GetLeft());
-            }
-
-            return bindingFunction.Invoke(serviceResponse.GetRight());
+            return serviceResponse.IsRight
+                ? bindingFunction(serviceResponse.Data)
+                : new ErrorResponse<T2>(serviceResponse.Error);
         }
 
         /// <summary>
@@ -39,9 +36,8 @@
         {
             if (serviceResponse.IsLeft)
             {
-                action.Invoke(serviceResponse.GetLeft());
+                action(serviceResponse.Error);
             }
-
             return serviceResponse;
         }
 
@@ -55,12 +51,9 @@
         /// <returns>If errors exist, returns the instance of IServiceResponse{T} returned by <paramref name="continueWithFunction" />, else returns current instance.</returns>
         public static IServiceResponse<T> CatchAndContinue<T>(this IServiceResponse<T> serviceResponse, Func<Error, IServiceResponse<T>> continueWithFunction)
         {
-            if (serviceResponse.IsLeft)
-            {
-                return continueWithFunction.Invoke(serviceResponse.GetLeft());
-            }
-
-            return serviceResponse;
+            return serviceResponse.IsRight
+                ? serviceResponse
+                : continueWithFunction(serviceResponse.Error);
         }
 
         /// <summary>
@@ -73,14 +66,9 @@
         /// <returns>If errors exist, returns the instance of IServiceResponse{T} returned by <paramref name="continueWithFunction" />, else returns current instance.</returns>
         public static IServiceResponse<T> CatchAndContinue<T>(this IServiceResponse<T> serviceResponse, Func<Error, T> continueWithFunction)
         {
-            if (serviceResponse.IsLeft)
-            {
-                T result = continueWithFunction.Invoke(serviceResponse.GetLeft());
-
-                return new DataResponse<T>(result);
-            }
-
-            return serviceResponse;
+            return serviceResponse.IsRight
+                ? serviceResponse
+                : new DataResponse<T>(continueWithFunction(serviceResponse.Error));
         }
 
         /// <summary>
@@ -95,9 +83,8 @@
         {
             if (serviceResponse.IsRight)
             {
-                action.Invoke(serviceResponse.GetRight());
+                action(serviceResponse.Data);
             }
-
             return serviceResponse;
         }
 
@@ -113,14 +100,9 @@
         /// <returns>Instance of <see cref="IServiceResponse{T2}" />.</returns>
         public static IServiceResponse<T2> Fmap<T, T2>(this IServiceResponse<T> serviceResponse, Func<T, T2> mappingFunction)
         {
-            if (serviceResponse.IsLeft)
-            {
-                return serviceResponse.CreateGenericErrorResponse<T, T2>(serviceResponse.GetLeft());
-            }
-
-            T2 result = mappingFunction.Invoke(serviceResponse.GetRight());
-
-            return serviceResponse.CreateGenericDataResponse(result);
+            return serviceResponse.IsRight
+                ? new DataResponse<T2>(mappingFunction(serviceResponse.Data)) as IServiceResponse<T2>
+                : new ErrorResponse<T2>(serviceResponse.Error);
         }
 
         /// <summary>
@@ -133,8 +115,7 @@
         /// <returns>The current <see cref="IServiceResponse{T}" /> instance.</returns>
         public static IServiceResponse<T> Run<T>(this IServiceResponse<T> serviceResponse, Action action)
         {
-            action.Invoke();
-
+            action();
             return serviceResponse;
         }
         
@@ -147,12 +128,11 @@
         /// <exception cref="System.InvalidOperationException">There is nothing to return from left of either - Error or Data.</exception>
         public static Error FromLeft<T>(this IServiceResponse<T> serviceResponse)
         {
-            if (!serviceResponse.IsLeft)
+            if (serviceResponse.IsRight)
             {
                 throw new InvalidOperationException("Cannot return left of either when is right.");
             }
-
-            return serviceResponse.GetLeft();
+            return serviceResponse.Error;
         }
 
         /// <summary>
@@ -164,12 +144,11 @@
         /// <exception cref="System.InvalidOperationException">Cannot return right of either when left (errors) exist.</exception>
         public static T FromRight<T>(this IServiceResponse<T> serviceResponse)
         {
-            if (!serviceResponse.IsRight)
+            if (serviceResponse.IsLeft)
             {
                 throw new InvalidOperationException("Cannot return right of either when is left.");
             }
-
-            return serviceResponse.GetRight();
+            return serviceResponse.Data;
         }
     }
 }
