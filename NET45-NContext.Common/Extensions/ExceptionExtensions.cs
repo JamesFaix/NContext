@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Net;
 
 namespace NContext.Common
 {
@@ -8,7 +9,7 @@ namespace NContext.Common
         public static Error ToError(this Exception exception)
         {
             return new Error(
-                500, 
+                (Int32)HttpStatusCode.InternalServerError, 
                 exception.GetType().Name, 
                 new[] { exception.Message });
         }
@@ -16,7 +17,7 @@ namespace NContext.Common
         public static Error ToError(this AggregateException aggregateException)
         {
             return new AggregateError(
-                500,
+                (Int32)HttpStatusCode.InternalServerError,
                 aggregateException.GetType().Name,
                 aggregateException.InnerExceptions.Select(e => e.ToError()));
         }

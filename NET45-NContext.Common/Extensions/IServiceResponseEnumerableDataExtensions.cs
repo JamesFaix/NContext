@@ -23,29 +23,27 @@
         {
             var errors = new List<Error>();
             var data = new List<T>();
-            foreach (var serviceResponse in serviceResponses.TakeWhile(responseTransferObject => responseTransferObject != null))
+
+            foreach (var sr in serviceResponses.TakeWhile(x => x != null))
             {
-                if (serviceResponse.Error != null)
+                if (sr.IsLeft)
                 {
                     if (!aggregateErrors)
                     {
-                        return new ErrorResponse<IEnumerable<T>>(serviceResponse.Error);
+                        return sr.Error.AsErrorResponse<IEnumerable<T>>();
                     }
 
-                    errors.Add(serviceResponse.Error);
-                    break;
+                    errors.Add(sr.Error);
                 }
-
-                data.Add(serviceResponse.Data);
+                else
+                {
+                    data.Add(sr.Data);
+                }
             }
 
-            if (errors.Any())
-            {
-                return new ErrorResponse<IEnumerable<T>>(
-                    new AggregateError(errors[0].HttpStatusCode, errors[0].Code, errors));
-            }
-
-            return new DataResponse<IEnumerable<T>>(data);
+            return errors.Any()
+                ? errors.Aggregate().AsErrorResponse<IEnumerable<T>>()
+                : data.AsServiceResponse();
         }
 
         /// <summary>
@@ -65,29 +63,27 @@
         {
             var errors = new List<Error>();
             var data = new List<T>();
-            foreach (var serviceResponse in serviceResponses.TakeWhile(responseTransferObject => responseTransferObject != null))
+
+            foreach (var sr in serviceResponses.TakeWhile(x => x != null))
             {
-                if (serviceResponse.Error != null)
+                if (sr.IsLeft)
                 {
                     if (!aggregateErrors)
                     {
-                        return new ErrorResponse<IEnumerable<T>>(serviceResponse.Error);
+                        return sr.Error.AsErrorResponse<IEnumerable<T>>();
                     }
 
-                    errors.Add(serviceResponse.Error);
-                    break;
+                    errors.Add(sr.Error);
                 }
-
-                data.AddRange(serviceResponse.Data);
+                else
+                {
+                    data.AddRange(sr.Data);
+                }
             }
 
-            if (errors.Any())
-            {
-                return new ErrorResponse<IEnumerable<T>>(
-                    new AggregateError(errors[0].HttpStatusCode, errors[0].Code, errors));
-            }
-
-            return new DataResponse<IEnumerable<T>>(data);
+            return errors.Any()
+                ? errors.Aggregate().AsErrorResponse<IEnumerable<T>>()
+                : data.AsServiceResponse();
         }
     }
 }
