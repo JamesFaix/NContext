@@ -74,13 +74,10 @@
         private static Boolean Implements(Type type, Type interfaceType)
         {
             if (type == null) return false;
-
-            var typeInfo = type.GetTypeInfo();
-
-            return
-                (typeInfo.IsGenericType
-                    && type.GetGenericTypeDefinition() == interfaceType)
-                || typeInfo.ImplementedInterfaces.Any(t => t.GetTypeInfo().IsGenericType
+            
+            return Enumerable.Repeat(type, 1)
+                .Concat(type.GetTypeInfo().ImplementedInterfaces)
+                .Any(t => t.GetTypeInfo().IsGenericType
                     && t.GetGenericTypeDefinition() == interfaceType);
         }
 
