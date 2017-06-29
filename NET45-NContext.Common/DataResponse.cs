@@ -21,10 +21,7 @@
         /// <param name="data">The data.</param>
         public DataResponse(T data)
         {
-            var materializedData = MaterializeDataIfNeeded(data);
-            _Data = materializedData == null
-                ? default(T) 
-                : materializedData;
+            _Data = MaterializeDataIfNeeded(data);
         }
 
         /// <summary>
@@ -58,58 +55,48 @@
                 return data;
             }
 
-            var dataType = data.GetType();
-            var dataTypeInfo = dataType.GetTypeInfo();
-            if (!(data is IEnumerable) ||
-                !dataTypeInfo.IsGenericType ||
-                IsDictionary(dataType))
-            {
-                return data;
-            }
-
-            if (!IsQueryable(dataType) && !dataTypeInfo.IsNestedPrivate)
-            {
-                return data;
-            }
-
-            // Get the last generic argument.
-            // .NET has several internal iterable types in LINQ that have multiple generic
-            // arguments.  The last is reserved for the actual type used for projection.
-            // ex. WhereSelectArrayIterator, WhereSelectEnumerableIterator, WhereSelectListIterator
-            var genericType = dataType.GenericTypeArguments.Last();
-            if (dataType.GetGenericTypeDefinition() == typeof(Collection<>))
-            {
-                var collectionType = typeof(Collection<>).MakeGenericType(genericType);
-                return (T)collectionType.CreateInstance(data);
-            }
-
-            var listType = typeof(List<>).MakeGenericType(genericType);
-            return (T)listType.CreateInstance(data);
+            var runtimeType = data.GetType();
+            return IsPossiblyALazySequence(data, runtimeType)
+                ? Materialize(runtimeType, data)
+                : data;
         }
 
-        private static Boolean IsDictionary(Type type)
+        private static Boolean IsPossiblyALazySequence(T data, Type type)
         {
-            if (type == null) return false;
-
             var typeInfo = type.GetTypeInfo();
 
-            return (typeInfo.IsGenericType && type.GetGenericTypeDefinition() == typeof(IDictionary<,>)) ||
-                    typeInfo.ImplementedInterfaces
-                        .Any(interfaceType => interfaceType.GetTypeInfo().IsGenericType &&
-                             interfaceType.GetGenericTypeDefinition() == typeof(IDictionary<,>));
+            return data is IEnumerable &&
+                typeInfo.IsGenericType &&
+                !Implements(type, typeof(IDictionary<,>)) &&
+                (Implements(type, typeof(IQueryable<>)) || typeInfo.IsNestedPrivate);
         }
 
-        private static Boolean IsQueryable(Type type)
+        private static Boolean Implements(Type type, Type interfaceType)
         {
             if (type == null) return false;
 
             var typeInfo = type.GetTypeInfo();
 
             return
-                (typeInfo.IsGenericType && type.GetGenericTypeDefinition() == typeof(IQueryable<>)) ||
-                 typeInfo.ImplementedInterfaces
-                     .Any(interfaceType => interfaceType.GetTypeInfo().IsGenericType &&
-                          interfaceType.GetGenericTypeDefinition() == typeof(IQueryable<>));
+                (typeInfo.IsGenericType
+                    && type.GetGenericTypeDefinition() == interfaceType)
+                || typeInfo.ImplementedInterfaces.Any(t => t.GetTypeInfo().IsGenericType
+                    && t.GetGenericTypeDefinition() == interfaceType);
+        }
+
+        private static U Materialize<U>(Type type , U data)
+        {
+            // Get the last generic argument.
+            // .NET has several internal iterable types in LINQ that have multiple generic
+            // arguments.  The last is reserved for the actual type used for projection.
+            // ex. WhereSelectArrayIterator, WhereSelectEnumerableIterator, WhereSelectListIterator
+            var elementType = type.GenericTypeArguments.Last();
+            var collectionType = type.GetGenericTypeDefinition() == typeof(Collection<>)
+                ? typeof(Collection<>)
+                : typeof(List<>);
+
+            var constructedType = collectionType.MakeGenericType(elementType);
+            return (U)constructedType.CreateInstance(data);
         }
     }
 }
