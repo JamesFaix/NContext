@@ -22,44 +22,34 @@
         public DataResponse(T data)
         {
             var materializedData = MaterializeDataIfNeeded(data);
-            _Data = (materializedData == null) ? default(T) : materializedData;
+            _Data = materializedData == null
+                ? default(T) 
+                : materializedData;
         }
 
         /// <summary>
         /// Gets the is left.
         /// </summary>
         /// <value>The is left.</value>
-        public override Boolean IsLeft
-        {
-            get { return false; }
-        }
+        public override Boolean IsLeft { get { return false; } }
 
         /// <summary>
         /// Gets the left value. (Returns null)
         /// </summary>
         /// <returns>Error.</returns>
-        public override Error GetLeft()
-        {
-            return null;
-        }
+        public override Error GetLeft() { return null; }
 
         /// <summary>
         /// Gets the right value, <see cref="Data"/>.
         /// </summary>
         /// <returns>T.</returns>
-        public override T GetRight()
-        {
-            return _Data;
-        }
+        public override T GetRight() { return _Data; }
 
         /// <summary>
         /// Gets the data.
         /// </summary>
         /// <value>The data.</value>
-        public override T Data
-        {
-            get { return _Data; }
-        }
+        public override T Data { get { return _Data; } }
 
         private static T MaterializeDataIfNeeded(T data)
         {

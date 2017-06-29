@@ -21,11 +21,7 @@
             : base(
                 httpStatusCode, 
                 code, 
-                errors.ToMaybe()
-                    .Bind(
-                        errorCollection => 
-                            errorCollection.SelectMany(e => e.Messages).ToMaybe())
-                    .FromMaybe(Enumerable.Empty<String>()))
+                errors.EmptyIfNull().SelectMany(e => e.Messages))
         {
             Errors = errors;
         }

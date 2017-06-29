@@ -15,28 +15,19 @@
         /// Initializes a new instance of the <see cref="Left{A, B}" /> class.
         /// </summary>
         /// <param name="value">The value.</param>
-        public Left(A value)
-        {
-            _Value = value;
-        }
+        public Left(A value) { _Value = value; }
 
         /// <summary>
         /// Gets whether the instance is left.
         /// </summary>
         /// <value>The value, is left.</value>
-        public override Boolean IsLeft
-        {
-            get { return true; }
-        }
+        public override Boolean IsLeft { get { return true; } }
 
         /// <summary>
         /// Gets the left value.
         /// </summary>
         /// <returns>A.</returns>
-        public override A GetLeft()
-        {
-            return _Value;
-        }
+        public override A GetLeft() { return _Value; }
 
         /// <summary>
         /// Gets the right value.

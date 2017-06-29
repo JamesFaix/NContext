@@ -15,19 +15,13 @@
         /// Initializes a new instance of the <see cref="Right{A, B}"/> class.
         /// </summary>
         /// <param name="value">The value.</param>
-        public Right(B value)
-        {
-            _Value = value;
-        }
+        public Right(B value) { _Value = value; }
 
         /// <summary>
         /// Gets whether the instance is left.
         /// </summary>
         /// <value>The is left.</value>
-        public override Boolean IsLeft
-        {
-            get { return false; }
-        }
+        public override Boolean IsLeft { get { return false; } }
 
         /// <summary>
         /// Gets the right value.
@@ -43,9 +37,6 @@
         /// Gets the right value.
         /// </summary>
         /// <returns>B.</returns>
-        public override B GetRight()
-        {
-            return _Value;
-        }
+        public override B GetRight() { return _Value; }
     }
 }

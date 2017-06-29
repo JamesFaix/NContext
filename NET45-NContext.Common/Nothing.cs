@@ -12,25 +12,13 @@
         /// Gets a value indicating whether the instance is <see cref="Just{T}"/>.
         /// </summary>
         /// <remarks></remarks>
-        public Boolean IsJust
-        {
-            get
-            {
-                return false;
-            }
-        }
+        public Boolean IsJust { get { return false; } }
 
         /// <summary>
         /// Gets a value indicating whether the instance is <see cref="Nothing{T}"/>.
         /// </summary>
         /// <remarks></remarks>
-        public Boolean IsNothing
-        {
-            get
-            {
-                return true;
-            }
-        }
+        public Boolean IsNothing { get { return true; } }
 
         /// <summary>
         /// Returns the specified default value if the <see cref="IMaybe{T}"/> is <see cref="Nothing{T}"/>; 
@@ -39,19 +27,13 @@
         /// <param name="defaultValue">The default value.</param>
         /// <returns>Instance of <typeparamref name="T"/>.</returns>
         /// <remarks></remarks>
-        public T FromMaybe(T defaultValue)
-        {
-            return defaultValue;
-        }
+        public T FromMaybe(T defaultValue) { return defaultValue; }
 
         /// <summary>
         /// Returns this instance.
         /// </summary>
         /// <returns>Nothing{T}.</returns>
-        public IMaybe<T> Empty()
-        {
-            return this;
-        }
+        public IMaybe<T> Empty() { return this; }
 
         /// <summary>
         /// Returns a new <see cref="Nothing{T2}"/>.
@@ -60,10 +42,7 @@
         /// <param name="bindingFunction">The function used to bind.</param>
         /// <returns>Instance of <see cref="IMaybe{TResult}"/>.</returns>
         /// <remarks></remarks>
-        public IMaybe<T2> Bind<T2>(Func<T, IMaybe<T2>> bindingFunction)
-        {
-            return new Nothing<T2>();
-        }
+        public IMaybe<T2> Bind<T2>(Func<T, IMaybe<T2>> bindingFunction) { return new Nothing<T2>(); }
 
         /// <summary>
         /// Returns the current instance.
@@ -71,9 +50,6 @@
         /// <param name="action">The action to invoke.</param>
         /// <returns>Current instance.</returns>
         /// <remarks></remarks>
-        public IMaybe<T> Let(Action<T> action)
-        {
-            return this;
-        }
+        public IMaybe<T> Let(Action<T> action) { return this; }
     }
 }

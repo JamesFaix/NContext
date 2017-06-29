@@ -20,22 +20,15 @@
         /// <remarks></remarks>
         public static implicit operator Boolean(ServiceResponse<T> serviceResponse)
         {
-            if (serviceResponse == null)
+            if (serviceResponse == null
+                || serviceResponse.IsLeft 
+                || serviceResponse.Data == null)
             {
                 return false;
             }
 
-            if (serviceResponse.Error != null)
-            {
-                return false;
-            }
-
-            if (typeof(T) == typeof(Boolean))
-            {
-                return Convert.ToBoolean(serviceResponse.Data);
-            }
-
-            return serviceResponse.Data != null;
+            return typeof(T) == typeof(Boolean)
+                && Convert.ToBoolean(serviceResponse.Data);
         }
 
         /// <summary>

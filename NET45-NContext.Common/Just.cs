@@ -24,25 +24,13 @@
         /// Gets a value indicating whether the instance is <see cref="Just{T}"/>.
         /// </summary>
         /// <remarks></remarks>
-        public Boolean IsJust
-        {
-            get
-            {
-                return true;
-            }
-        }
+        public Boolean IsJust { get { return true; } }
 
         /// <summary>
         /// Gets a value indicating whether the instance is <see cref="Nothing{T}"/>.
         /// </summary>
         /// <remarks></remarks>
-        public Boolean IsNothing
-        {
-            get
-            {
-                return false;
-            }
-        }
+        public Boolean IsNothing { get { return false; } }
 
         /// <summary>
         /// Returns the specified default value if the <see cref="IMaybe{T}"/> is <see cref="Nothing{T}"/>; 
@@ -51,19 +39,13 @@
         /// <param name="defaultValue">The default value.</param>
         /// <returns>Instance of <typeparamref name="T"/>.</returns>
         /// <remarks></remarks>
-        public T FromMaybe(T defaultValue)
-        {
-            return _Value;
-        }
+        public T FromMaybe(T defaultValue) { return _Value; }
 
         /// <summary>
         /// Returns a new <see cref="Nothing{T}" />.
         /// </summary>
         /// <returns>Nothing{T}.</returns>
-        public IMaybe<T> Empty()
-        {
-            return new Nothing<T>();
-        }
+        public IMaybe<T> Empty() { return new Nothing<T>(); }
 
         /// <summary>
         /// Binds <typeparamref name="T"/> into an instance of <see cref="IMaybe{T2}"/>.
@@ -74,7 +56,7 @@
         /// <remarks></remarks>
         public IMaybe<T2> Bind<T2>(Func<T, IMaybe<T2>> bindingFunction)
         {
-            return bindingFunction.Invoke(_Value);
+            return bindingFunction(_Value);
         }
 
         /// <summary>
@@ -85,8 +67,7 @@
         /// <remarks></remarks>
         public IMaybe<T> Let(Action<T> action)
         {
-            action.Invoke(_Value);
-
+            action(_Value);
             return this;
         }
     }

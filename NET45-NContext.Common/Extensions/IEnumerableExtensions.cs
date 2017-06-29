@@ -13,5 +13,10 @@ namespace NContext.Common
                     : enumerable.Where(predicate))
                 .GetEnumerator();
         }
+
+        public static IEnumerable<T> EmptyIfNull<T>(this IEnumerable<T> enumerable)
+        {
+            return enumerable ?? Enumerable.Empty<T>();
+        }
     }
 }
